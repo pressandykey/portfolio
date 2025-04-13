@@ -2,11 +2,11 @@
 
 ---
 
-**ФИО**: Андрей Геннадьевич Коновалов
-**Контактная информация**:
-Email: andrey.konovalov.msk@gmail.com
-Telegram: https://t.me/andygenk
-**Резюме**: [SA](https://domodedovo50.hh.ru/resume/4bb6369fff0908c4650039ed1f33447877535a)
+**ФИО**: Андрей Геннадьевич Коновалов<br>
+**Контактная информация**:<br>
+Email: andrey.konovalov.msk@gmail.com<br>
+Telegram: https://t.me/andygenk<br>
+**Резюме**: [SA](https://domodedovo50.hh.ru/resume/4bb6369fff0908c4650039ed1f33447877535a)<br>
 **Место**: Москва, Россия
 
 ---
