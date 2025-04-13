@@ -1,0 +1,11 @@
+@startuml Style
+hide empty description
+
+skinparam state {
+    BackgroundColor #FEFECE
+    BorderColor #AA063B
+    FontName Helvetica
+    BorderThickness 2
+    ArrowColor #AA063B
+}
+@enduml

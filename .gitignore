@@ -1,0 +1,11 @@
+# backup draw.io
+*.bkp
+
+# vs code settings
+.vscode/
+
+# obsidian settings
+.obsidian/
+
+# В работе
+# architecture/

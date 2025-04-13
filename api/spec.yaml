@@ -1,0 +1,1375 @@
+openapi: 3.1.1
+info:
+  title: API системы управления маршрутной сетью
+  description: |-
+    Пример описания api для портфолио. Описание составлено по мотивам работ выполненных на проекте для демонстрации навыков описания api. Интерфейс предоставляет возможность формирования периодов для графиков движения поездов, ниток поездов и их маршрутов, схем поездов, а так же согласование, отклонение и утверждение поездов.
+  contact:
+    name: Andrei Konovalov
+    url: https://t.me/andygenk
+  version: 1.0.0
+servers:
+  - url: https://{stand}.route-net.ru:{port}/api
+    variables:
+      stand:
+        description: Испытательные стенды проекта
+        enum:
+          - dev
+          - test
+          - preprod
+        default: test
+      port:
+        enum:
+          - '8443'
+          - '443'
+        default: '443'
+tags:
+  - name: GDPs
+    description: График движения поездов
+  - name: trains
+    description: Поезда маршрутной сети
+  - name: routes
+    description: Маршруты поездов
+  - name: schemas
+    description: Схемы поездов
+
+paths:
+  /v1/gdps:
+    post:
+      tags:
+        - GDPs
+      summary: Добавить график движения поездов
+      description: Добавить новый период для формирования графика движения поездов
+      operationId: addGDP
+      requestBody:
+        description: Параметры графика движения
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GDP'
+            example:
+              startAt: 2024-01-01
+              endAt: 2026-12-31
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GDP'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Неверные параметры запроса
+                  details:
+                    - field: startAt
+                      message: В поле должна быть указана дата
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: INCORRECT_PERIOD
+                  message: Не верно задан период графика движения
+                  details:
+                    - field: startAt
+                      message: Дата начала действия ГДП не должна попадать в период действия другого ГДП
+  /v1/gdps/{gdpId}:
+    parameters:
+      - $ref: '#/components/parameters/gdpId'
+    get:
+      tags:
+        - GDPs
+      summary: Получить график движения поездов
+      description: Получить конкретный график движения по идентификатору
+      operationId: getGDP
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GDP'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: График оборота не найден
+    put:
+      tags:
+        - GDPs
+      summary: Изменить график движения поездов
+      description: Изменить период графика движения поездов
+      operationId: updateGDP
+      requestBody:
+        description: Параметры графика движения
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GDP'
+            example:
+              startAt: 2024-01-01
+              endAt: 2026-12-31
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GDP'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Неверные параметры запроса
+                  details:
+                    - field: startAt
+                      message: В поле должна быть указана дата
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: INCORRECT_PERIOD
+                  message: Не верно задан период графика движения
+                  details:
+                    - field: startAt
+                      message: Дата начала действия ГДП не должна попадать в период действия другого ГДП
+    delete:
+      tags:
+        - GDPs
+      summary: Удалить график движения поездов
+      description: Удалить график движения поездов по идентификатору
+      operationId: deleteGDP
+      responses:
+        '204':
+          description: No Content
+        '403':
+          description: Forbidden
+  /v1/trains:
+    post:
+      tags:
+        - trains
+      summary: Добавить новый поезд
+      description: Добавить новый поезд в график движения поездов (ГДП)
+      operationId: addTrain
+      requestBody:
+        description: Параметры поезда
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainsPair'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainsPair'
+              example:
+                direct:
+                  id: 1
+                  gdpId: 1
+                  carrierId: 1
+                  number: 1А
+                  categoryId: 1
+                  fromStationId: 1
+                  toStationId: 2
+                  departureAt: 2024-02-12T20:00:00Z
+                  arrivalAt: 2024-02-13T05:00:00Z
+                  name: Невский экспресс
+                  isBrand: true
+                  seasonId: 1
+                  status: planning
+                  trainId: 2
+                reverse:
+                  id: 2
+                  gdpId: 1
+                  carrierId: 1
+                  number: 2А
+                  categoryId: 1
+                  fromStationId: 2
+                  toStationId: 1
+                  departureAt: 2024-02-13T12:00:00Z
+                  arrivalAt: 2024-02-13T21:00:00Z
+                  name: Невский экспресс
+                  isBrand: true
+                  seasonId: 1
+                  status: planning
+                  trainId: 1
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Неверные параметры запроса
+                  details:
+                    - field: number
+                      message: В номере поезда должны быть указаны цифры и одна буква
+  /v1/trains/{trainId}:
+    parameters:
+      - $ref: '#/components/parameters/trainId'
+    get:
+      tags:
+        - trains
+      summary: Получить поезд
+      description: Получение конкретного поезда по идентификатору
+      operationId: getTrain
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainsPair'
+              example:
+                direct:
+                  gdpId: 1
+                  carrierId: 1
+                  number: 1А
+                  fromStationId: 1
+                  toStationId: 2
+                  departureAt: 2024-02-12T20:00:00Z
+                  arrivalAt: 2024-02-13T05:00:00Z
+                  name: Невский экспресс
+                  isBrand: true
+                  seasonId: 1
+                reverse:
+                  gdpId: 1
+                  carrierId: 1
+                  number: 2А
+                  fromStationId: 2
+                  toStationId: 1
+                  departureAt: 2024-02-13T12:00:00Z
+                  arrivalAt: 2024-02-13T21:00:00Z
+                  name: Невский экспресс
+                  isBrand: true
+                  seasonId: 1
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Поезд не найден
+    put:
+      tags:
+        - trains
+      summary: Редактировать поезд
+      description: Редактирование конкретного поезда
+      operationId: updateTrain
+      requestBody:
+        description: Параметры поезда
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainsPair'
+            example:
+              direct:
+                gdpId: 1
+                carrierId: 1
+                number: 5В
+                fromStationId: 1
+                toStationId: 4
+                departureAt: 2024-02-12T20:00:00Z
+                arrivalAt: 2024-02-13T05:00:00Z
+                name: Красная стрела
+                isBrand: true
+                seasonId: 1
+              reverse:
+                gdpId: 1
+                carrierId: 1
+                number: 6М
+                fromStationId: 4
+                toStationId: 1
+                departureAt: 2024-02-13T12:00:00Z
+                arrivalAt: 2024-02-13T21:00:00Z
+                name: Красная стрела
+                isBrand: true
+                seasonId: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainsPair'
+              example:
+                direct:
+                  id: 1
+                  gdpId: 1
+                  carrierId: 1
+                  number: 5В
+                  categoryId: 1
+                  fromStationId: 1
+                  toStationId: 4
+                  departureAt: 2024-02-12T20:00:00Z
+                  arrivalAt: 2024-02-13T05:00:00Z
+                  name: Красная стрела
+                  isBrand: true
+                  seasonId: 1
+                  status: planning
+                  trainId: 2
+                reverse:
+                  id: 2
+                  gdpId: 1
+                  carrierId: 1
+                  number: 6М
+                  categoryId: 1
+                  fromStationId: 4
+                  toStationId: 1
+                  departureAt: 2024-02-13T12:00:00Z
+                  arrivalAt: 2024-02-13T21:00:00Z
+                  name: Красная стрела
+                  isBrand: true
+                  seasonId: 1
+                  status: planning
+                  trainId: 1
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Неверные параметры запроса
+                  details:
+                    - field: isBrand
+                      message: В поле должно быть указано значение true или false
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: INVALID_TRAIN
+                  message: Не верно указан обратный поезд
+                  details:
+                    - field: reverse.number
+                      message: Неверно указан номер поезда. Поезд 6М уже есть в базе в паре с поездом 5К
+    delete:
+      tags:
+        - trains
+      summary: Удалить поезд
+      description: Удаление поезда по идентификатору
+      operationId: deleteTrain
+      responses:
+        '204':
+          description: No Content
+        '403':
+          description: Forbidden
+
+  /v1/trains/{trainId}/toApproval:
+    parameters:
+      - $ref: '#/components/parameters/trainId'
+    post:
+      tags:
+        - trains
+      summary: Отправить поезд на согласование
+      description: Запустить процесс согласования поезда
+      operationId: toApprovalTrain
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Поезд не найден
+
+  /v1/trains/{trainId}/accept:
+    parameters:
+      - $ref: '#/components/parameters/trainId'
+    post:
+      tags:
+        - trains
+      summary: Принять поезд
+      description: Принятие поезда отдельным подразделением в процессе согласования
+      operationId: acceptTrain
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Поезд не найден
+
+  /v1/trains/{trainId}/reject:
+    parameters:
+      - $ref: '#/components/parameters/trainId'
+    post:
+      tags:
+        - trains
+      summary: Отклонить поезд
+      description: Отклонение поезда отдельным подразделением в процессе согласования
+      operationId: rejectTrain
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Поезд не найден
+
+  /v1/trains/{trainId}/toApproved:
+    parameters:
+      - $ref: '#/components/parameters/trainId'
+    post:
+      tags:
+        - trains
+      summary: Утвердить поезд
+      description: Утверждение поезда по результатам согласования
+      operationId: toApprovedTrain
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Поезд не найден
+
+  /v1/trains/search:
+    post:
+      tags:
+        - trains
+      summary: Получение списка поездов
+      description: Получение списка поездов с использованием пагинации и нескольких фильтров в запросе
+      operationId: getTrainsList
+      requestBody:
+        description: Параметры фильтрации списка поездов и номер страницы данных
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListFilters'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainsList'
+              example:
+                  totalCount: 2
+                  items:
+                  - id: 1
+                    number: 0013A
+                    fromStation: САНКТ-ПЕТЕРБУРГ-ГЛАВН.
+                    toStation: МОСКВА ОКТЯБРЬСКАЯ
+                    periodicity: Ежедневно
+                    tripTime: 8 ч 0 мин
+                    isBrand: false
+                    category: Скорые круглогодичные
+                    name:
+                    carrier: АО «ФПК»
+                    status: Планирование
+                  - id: 2
+                    number: 0130М
+                    fromStation: АДЛЕР
+                    toStation: МОСКВА КАЗАНСКАЯ
+                    periodicity: Ежедневно
+                    tripTime: 23 ч 44 мин
+                    isBrand: true
+                    category: Скорые круглогодичные
+                    name:
+                    carrier: АО «ФПК»
+                    status: Согласование
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: UNKNOWN_FIELDS
+                  message: Неверное наименование поля
+                  details:
+                    - field: filters.field
+                      message: Указано недопустимое значение administration
+
+  /v1/trains/export:
+    post:
+      tags:
+        - trains
+      summary: Экспортировать список поездов в файл
+      description: Формирование xlsx файла со списком поездов по заданным фильтрам 
+      operationId: exportTrainsList
+      requestBody:
+        description: Параметры фильтрации списка поездов
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportTrainsFilter'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              example: "attachment; filename=trainList_01042025.xlsx"
+
+  /v1/trains/{trainId}/routeStations:
+    parameters:
+      - $ref: '#/components/parameters/trainId'
+    post:
+      tags:
+        - routes
+      summary: Добавить станции в маршрут
+      description: Добавление промежуточных станций в маршрут поезда
+      operationId: addRouteStations
+      requestBody:
+        description: Параметры маршрута
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Route'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Неверные параметры запроса
+                  details:
+                    - field: items.departureAt
+                      message: Время прибытия должно быть больше или равно времени отправления
+    get:
+      tags:
+        - routes
+      summary: Получить маршрут поезда
+      description: Получение полного маршрута поезда
+      operationId: getTrainRoute
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Поезд не найден
+
+    put:
+      tags:
+        - routes
+      summary: Редактировать маршрут
+      description: Редактирование параметров станции маршрута
+      operationId: updateTrainRoute
+      requestBody:
+        description: Параметры маршрута
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Route'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Поезд не найден
+    delete:
+      tags:
+        - routes
+      summary: Удалить станции из маршрута
+      description: Удаление промежуточных станций из маршрута. Удаление станции формирования и станции назначения поезда выполняется только вместе с поездом
+      operationId: deleteRouteStations
+      requestBody:
+        description: Параметры удаляемых станций
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trainId:
+                  type: integer
+                  format: int32
+                items:
+                  type: array
+                  items:
+                    type: integer
+                    format: int32
+              example:
+                trainId: 1
+                items: [ 3, 5, 6, 8, 9]
+      responses:
+        '204':
+          description: No Content
+        '403':
+          description: Forbidden
+  /v1/schemas:
+    post:
+      tags:
+        - schemas
+      summary: Добавить схему
+      description: Создание пустой схемы в поезде
+      operationId: addSchema
+      requestBody:
+        description: Параметры схемы
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Schema'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schema'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Неверные параметры запроса
+                  details:
+                    - field: departureAt
+                      message: Неверный формат даты
+
+  /v1/schemas/{schemaId}:
+    parameters:
+      - $ref: '#/components/parameters/schemaId'
+    get:
+      tags:
+        - schemas
+      summary: Получить схему поезда
+      description: Получение полной схемы поезда
+      operationId: getSchema
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schema'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Группа не найдена
+    put:
+      tags:
+        - schemas
+      summary: Редактировать схему
+      description: Редактирование схемы поезда
+      operationId: updateSchema
+      requestBody:
+        description: Параметры схемы поезда
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Schema'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schema'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Группа не найдена
+    delete:
+      tags:
+        - schemas
+      summary: Удалить схему
+      description: Удаление схемы поезда
+      operationId: deleteSchema
+      responses:
+        '204':
+          description: No Content
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: RESOURCE_IN_USE
+                  message: Невозможно удалить единственную схему поезда
+                  details:
+                    - field: id
+                      message: Схема № 1 является единственной схемой поезда № 18А
+
+components:
+  parameters:
+    gdpId:
+      name: gdpId
+      in: path
+      description: Идентификатор графика движения поездов
+      required: true
+      schema:
+        type: integer
+    trainId:
+      name: trainId
+      in: path
+      description: Идентификатор поезда
+      required: true
+      schema:
+        type: integer
+    schemaId:
+      name: schemaId
+      in: path
+      description: Идентификатор схемы поезда
+      required: true
+      schema:
+        type: integer
+  schemas:
+    GDP:
+      type: object
+      required:
+        - startAt
+        - endAt
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        startAt:
+          type: string
+          format: date
+        endAt:
+          type: string
+          format: date
+      example:
+        id: 1
+        startAt: 2024-01-01
+        endAt: 2026-12-31
+
+    TrainsFilters:
+      type: object
+      properties:
+        gdpId:
+          type: integer
+          format: int32
+          example: 1
+        number:
+          type: string
+          maxLength: 5
+          example: 17А
+        fromStation:
+          type: string
+          example: Москва
+        toStation:
+           type: string
+           example: Санкт-
+        periodicityId:
+          type: integer
+          format: int32
+          example: 1
+        isBrand:
+          type: boolean
+          example: true
+        categoryId:
+          type: integer
+          format: int32
+          example: 1
+        name:
+          type: string
+          example: null
+        carrierId:
+          type: integer
+          format: int32
+          example: 1
+        status:
+          type: string
+          example: planning
+
+    TrainsSorts:
+      type: array
+      items:
+        type: object
+        properties:
+          field:
+            type: string
+            example: name
+          isAsc:
+            type: boolean
+            default: true
+
+    ListFilters:
+      type: object
+      properties:
+        offset:
+          type: integer
+          format: int32
+          minimum: 0
+          default: 0
+        limit:
+          type: integer
+          minimum: 5
+          maximum: 100
+          default: 20
+        filters:
+          $ref: '#/components/schemas/TrainsFilters'
+        sort:
+          $ref: '#/components/schemas/TrainsSorts'
+
+    ExportColumns:
+      type: array
+      items:
+        type: string
+      description: Экспортируемые колонки
+      example: ["number", "fromStation", "toStation"]
+
+    ExportTrainsFilter:
+      type: object
+      properties:
+        filters:
+          $ref: '#/components/schemas/TrainsFilters'
+        sort:
+          $ref: '#/components/schemas/TrainsSorts'
+        columns:
+          $ref: '#/components/schemas/ExportColumns'
+
+    TrainsListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        number:
+          type: string
+        fromStation:
+          type: string
+        toStation:
+          type: string
+        periodicity:
+          type: string
+        tripTime:
+          type: string
+        isBrand:
+          type: boolean
+        category:
+          type: string
+        name:
+          type: string
+        carrier:
+          type: string
+        status:
+          type: string
+      required:
+        - id
+        - number
+        - fromStation
+        - toStation
+        - periodicity
+        - tripTime
+        - isBrand
+        - carrier
+        - status
+    TrainsList:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Train'
+    Train:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        gdpId:
+          type: integer
+          format: int32
+        carrierId:
+          type: integer
+          format: int32
+        number:
+          type: string
+          minLength: 2
+          maxLength: 5
+        categoryId:
+          type: integer
+          format: int32
+          readOnly: true
+        fromStationId:
+          type: integer
+          format: int32
+        toStationId:
+          type: integer
+          format: int32
+        departureAt:
+          type: string
+          format: date-time
+        arrivalAt:
+          type: string
+          format: date-time
+        name:
+          type: string
+          maxLength: 255
+        isBrand:
+          type: boolean
+        seasonId:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum: [planning, approval, preApproved, approved]
+          description: |
+            Статус поезда:
+              - planning - Планирование
+              - approval - Согласование
+              - preApproved - Предварительно утвержден
+              - approved - Утвержден
+          readOnly: true
+        trainId:
+          type: integer
+          format: int32
+          readOnly: true
+      required:
+        - gdpId
+        - carrierId
+        - number
+        - categoryId
+        - fromStationId
+        - toStationId
+        - departureAt
+        - arrivalAt
+        - isBrand
+        - seasonId
+    TrainsPair:
+      type: object
+      properties:
+        direct:
+          $ref: '#/components/schemas/Train'
+        reverse:
+          $ref: '#/components/schemas/Train'
+      required:
+        - direct
+      example:
+        direct:
+          gdpId: 1
+          carrierId: 1
+          number: 1А
+          fromStationId: 1
+          toStationId: 2
+          departureAt: 2024-02-12T20:00:00Z
+          arrivalAt: 2024-02-13T05:00:00Z
+          name: Невский экспресс
+          isBrand: true
+          seasonId: 1
+        reverse:
+          gdpId: 1
+          carrierId: 1
+          number: 2А
+          fromStationId: 2
+          toStationId: 1
+          departureAt: 2024-02-13T12:00:00Z
+          arrivalAt: 2024-02-13T21:00:00Z
+          name: Невский экспресс
+          isBrand: true
+          seasonId: 1
+    RouteItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          example: 3
+        station:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 3
+            name:
+              type: string
+              readOnly: true
+              example: Тверь
+            code:
+              type: string
+              example: 2004158
+              readOnly: true
+        arrivalAt:
+          type: string
+          format: time
+          example: 12:14:00
+        arrivalDay:
+          type: integer
+          format: int32
+          example: 0
+        parking:
+          type: integer
+          example: 5
+          readOnly: true
+        departureAt:
+          type: string
+          format: time
+          example: 12:19:00
+        departureDay:
+          type: integer
+          format: int32
+          example: 0
+        distance:
+          type: integer
+          format: int32
+          example: 161
+      required:
+        - stationId
+        - distance
+
+    Route:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          example: 1
+        trainId:
+          type: integer
+          format: int32
+          writeOnly: true
+          example: 1
+        train:
+          type: string
+          readOnly: true
+          example: 18А
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteItem'
+
+    TrainLength:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          example: 1
+        quantity:
+          type: integer
+          example: 16
+        fromStation:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 1
+            name:
+              type: string
+              readOnly: true
+              example: Москва
+        toStation:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 3
+            name:
+              type: string
+              readOnly: true
+              example: Тверь
+        note:
+          type: string
+          example: Дополнительная информация в свободной форме
+
+    CarriageNumeration:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          example: 1
+        position:
+          type: boolean
+          example: true
+        fromStation:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 1
+            name:
+              type: string
+              readOnly: true
+              example: Москва
+        toStation:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 3
+            name:
+              type: string
+              readOnly: true
+              example: Тверь
+        note:
+          type: string
+          example: Дополнительная информация в свободной форме
+
+    CoachInSchema:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          example: 1
+        number:
+          type: integer
+          format: int32
+          example: 8
+        order:
+          type: integer
+          format: int32
+          example: 3
+        type:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 1
+            code:
+              type: string
+              example: ПЛ
+          readOnly: true
+
+    CoachSetInSchema:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          example: 1
+        order:
+          type: integer
+          example: 1
+        name: 
+          type: string
+          example: Любое наименование
+          readOnly: true
+        position:
+          type: boolean
+          example: true
+        coaches:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoachInSchema'
+          readOnly: true
+
+    Schema:
+      type: object
+      required:
+        - train
+        - periodicity
+        - departureAt
+        - arrivalAt
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          example: 1
+        train:
+          type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 1
+            number:
+              type: string
+              readOnly: true
+              example: 18А
+        number:
+          type: integer
+          format: int32
+          readOnly: true
+          example: 2
+        periodicity:
+          type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              format: int32
+              example: 2
+            name:
+              type: string
+              readOnly: true
+              example: Ежедневно
+        departureAt:
+          type: array
+          items:
+            type: string
+            format: date
+          example: 
+            - 2025-04-01
+            - 2025-04-02
+            - 2025-04-03
+        arrivalAt:
+          type: array
+          items:
+            type: string
+            format: date
+          example: 
+            - 2025-04-05
+            - 2025-04-06
+            - 2025-04-07
+        coachSets:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoachSetInSchema'
+        trainLength:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrainLength'
+        carriageNumeration:
+          type: array
+          items:
+            $ref: '#/components/schemas/CarriageNumeration'
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: 
+              type: string
+              description: Код ошибки
+            message:
+              type: string
+              description: Сообщение
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field: 
+                    type: string
+                    description: Поле, в котором возникла ошибка
+                  message:
+                    type: string
+                    description: Описание ошибки

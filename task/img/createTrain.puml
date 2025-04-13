@@ -1,0 +1,94 @@
+@startuml Создать поезд
+
+autonumber
+
+participant ui as ":UI"
+participant gateway as ":Gateway"
+participant train as ":Trains"
+participant route as ":Routes"
+queue rmq as ":RabbitMQ"
+participant orc as ":Orchestration"
+database db_train as "trains"
+database db_route as "routes"
+
+activate ui
+ui -> gateway: createTrain()
+activate gateway
+gateway -> train: createTrain()
+activate train
+train ->> rmq: createTrain
+deactivate train
+activate rmq
+rmq ->> orc: createTrain
+deactivate rmq
+== Валидация данных ==
+activate orc
+orc ->> rmq: validateTrain
+deactivate orc
+activate rmq
+rmq ->> train: validateTrain
+deactivate rmq
+activate train
+train -> db_train: searchTrain
+activate db_train
+db_train --> train: result
+deactivate db_train
+train -> train: validate
+train -->> rmq: result
+deactivate train
+activate rmq
+rmq -->> orc: result
+deactivate rmq
+activate orc
+alt Success
+== Сохранение поезда ==
+    orc ->> rmq: createTrain
+    deactivate orc
+    activate rmq
+    rmq ->> train: createTrain
+    deactivate rmq
+    activate train
+    train -> db_train: save
+    activate db_train
+    db_train --> train: result
+    deactivate db_train
+    train -->> rmq: result
+    deactivate train
+    activate rmq
+    rmq -->> orc: result
+    deactivate rmq
+    == Сохранение станций маршрута ==
+    activate orc
+    orc ->> route: createRoute
+    deactivate orc
+    activate route 
+    route -> db_route: save
+    activate db_route
+    db_route --> route: result
+    deactivate db_route
+    route -->> rmq: result
+    deactivate route
+    activate rmq
+    rmq -->> orc: result
+    deactivate rmq
+    activate orc
+    orc -->> rmq: resultCreateTrain
+    deactivate orc
+    activate rmq
+    rmq -->> train: resultCreateTrain
+    deactivate rmq
+    activate train
+    train --> gateway: OK
+    deactivate train
+    gateway --> ui: OK
+else VALIDATION_ERROR
+    activate orc
+    orc -->> train: error
+    deactivate orc
+    activate train
+    train --> gateway: error
+    deactivate train
+    gateway --> ui: error
+    deactivate gateway
+end
+@enduml

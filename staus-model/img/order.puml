@@ -1,0 +1,64 @@
+@startuml "Статусная модель заявки"
+
+!include style.puml
+
+skinparam maxMessageSize 25
+
+state "Черновик" as draft #WhiteSmoke
+draft: Создание новой заявки,\nСоздание заявки по образцу
+
+state "В работе" as inProgress {
+    state "Проводится проверка" as verification
+    verification: Проверка на стоп-факторы (KYC);\n Получение сведений из внешних источников
+    
+    state "Принята к рассмотрению" as consideration
+    consideration: Оценка продукции и расчет итогового балла
+    
+    state "Подписание соглашения" as agreement
+    agreement: Формирование соглашения,\nуточнение сведений о продукции,\nподписание соглашения
+    
+    state "Публикация на сайте" as publication
+    publication: Размещение сведений о продукции\nна сайте GoodFoodRussia.com
+    
+    state "Подписание акта" as act
+    act: Внесение сведений\nо фактически полученной продукции,\nформирование акта, подписание акта
+}
+
+state "Завершена" as completed {
+    state "Услуга оказана" as provided #PaleGreen
+    state "Передана в учет" as registration #PaleGreen
+    state "Заявка отклонена" as rejected 
+    state "Отказ клиента" as refusal #Salmon
+    state "Аннулирована" as cancelled
+}
+
+[*] --> draft: Заявка\nсоздана
+
+draft --> verification: Заявка\nподписана
+draft --> refusal: Клиент\nотказался\nот услуги
+draft --> cancelled: Истекло\nвремя\nподписания
+
+inProgress --> refusal: Клиент\nотказался\nот услуги
+
+verification --> consideration: Проверка\nпройдена
+verification --> rejected: Проверка\nне пройдена
+
+consideration --> agreement: Получен\nпроходной\nбалл
+consideration --> rejected: Не получен\nпроходной\nбалл
+
+agreement --> publication: Подписано\nсоглашение
+agreement --> refusal: Нарушен\nсрок\nподписания
+
+publication --> act: Сведения отправлены на сайт
+
+act --> provided: Подписан\nакт
+act --> refusal: Акт\nне подписан
+
+provided --> registration
+
+registration --> [*]
+rejected --> [*]
+refusal --> [*]
+cancelled --> [*]
+
+@enduml
