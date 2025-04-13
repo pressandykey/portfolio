@@ -53,7 +53,11 @@ Telegram: https://t.me/andygenk<br>
 
 ## Описание API
 
-- [Спецификация OpenAPI](/api/api#openapi)
+- [Спецификация OpenAPI](/api/api.md#openapi)
+
+## Описание архитектуры
+
+- [UML Component diagram](/architecture/architecture.md#uml-component-diagram)
 
 ## Постановка задачи
 
@@ -66,3 +70,4 @@ Telegram: https://t.me/andygenk<br>
 - [Activity ](/business-processes/bp.md#2-uml-activity-diagram)
 - [State Machine](/staus-model/status-model.md#uml-state-machine-diagram)
 - [Sequence](/task/backend.md#uml-sequence-diagram)
+- [UML Component diagram](/architecture/architecture.md#uml-component-diagram)
