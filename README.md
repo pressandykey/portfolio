@@ -57,7 +57,8 @@ Telegram: https://t.me/andygenk<br>
 
 ## Описание архитектуры
 
-- [UML Component diagram](/architecture/architecture.md#uml-component-diagram)
+- [UML Component diagram](/architecture/components.md)
+- [C4 model](/architecture/C4-model.md)
 
 ## Постановка задачи
 
@@ -70,4 +71,4 @@ Telegram: https://t.me/andygenk<br>
 - [Activity ](/business-processes/bp.md#2-uml-activity-diagram)
 - [State Machine](/staus-model/status-model.md#uml-state-machine-diagram)
 - [Sequence](/task/backend.md#uml-sequence-diagram)
-- [UML Component diagram](/architecture/architecture.md#uml-component-diagram)
+- [Component](/architecture/components.md#uml-component-diagram)
