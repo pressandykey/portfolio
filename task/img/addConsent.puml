@@ -1,0 +1,31 @@
+@startuml Добавить/отозвать согласие
+title Отправка в CDI статуса согласия
+
+autonumber "<b>(#)"
+
+participant MedInsure as mdi
+participant CDI as cdi
+
+ == Согласие Получено == 
+
+[-> mdi ++ : Consent (status = Received)
+  mdi -> mdi : Сохранить\nсогласие
+  mdi -> cdi ++ : POST ${base_url}/v4/consents
+  alt #E5FFE5 201 Created 
+    cdi --> mdi: consent
+  else  #FFE5E5 400 Bad request
+    cdi --> mdi : error
+  end
+...
+  == Согласие Отозвано == 
+  
+[-> mdi ++ : Consent (status = Revoked)
+  mdi -> mdi : Обновить\nсогласие
+  mdi -> cdi ++ : PATCH ${base_url}/v2/consents/{id}
+  alt #E5FFE5 200 OK
+    cdi --> mdi: consent
+  else  #FFE5E5 400 Bad request
+    cdi --> mdi : error
+  end
+
+@enduml
